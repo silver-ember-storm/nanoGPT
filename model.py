@@ -36,7 +36,7 @@ class CausalSelfAttention(nn.Module):
         self.n_embd = config.n_embd
         self.dropout = config.dropout
         
-        self.register_buffer("bias", torch.tril(torch.ones(config.block_size, config.block_size))
+        self.bias = (torch.tril(torch.ones(config.block_size, config.block_size))
                                     .view(1, 1, config.block_size, config.block_size))
 
     def forward(self, x):
