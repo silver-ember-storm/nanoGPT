@@ -38,13 +38,13 @@ class CausalSelfAttention(nn.Module):
                                     .view(1, 1, config.block_size, config.block_size))
 
     def forward(self, x):
-        B, T, C = x.size() # batch size, sequence length, embedding dimensionality (n_embd)
+        batch_size, num_tokens, n_embd = x.size() 
 
         # calculate query, key, values for all heads in batch and move head forward to be the batch dim
         
-        k = self.gen_key(x).view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
-        q = self.gen_query(x).view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
-        v = self.gen_value(x).view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
+        k = self.gen_key(x).view(batch_size, num_tokens, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
+        q = self.gen_query(x).view(batch_size, num_tokens, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
+        v = self.gen_value(x).view(batch_size, num_tokens, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
 
         att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
         att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
