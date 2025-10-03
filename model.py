@@ -49,7 +49,7 @@ class CausalSelfAttention(nn.Module):
 
         att = einx.dot("batch head key_token [dim], batch head query_token [dim] -> batch head key_token query_token", key, query)
         att /= math.sqrt(self.key_query_dim)
-        att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
+        att = att.masked_fill(self.bias[:,:,:num_tokens,:num_tokens] == 0, float('-inf'))
         att = F.softmax(att, dim=-1)
         att = self.attn_dropout(att)
         y = att @ value # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
