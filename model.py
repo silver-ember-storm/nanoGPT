@@ -15,6 +15,8 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
+import einx
+
 class CausalSelfAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
