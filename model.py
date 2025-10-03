@@ -1,4 +1,4 @@
-"""
+f"""
 Full definition of a GPT Language Model, all of it in this single file.
 References:
 1) the official GPT-2 TensorFlow implementation released by OpenAI:
@@ -21,12 +21,12 @@ class CausalSelfAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
         assert config.n_embd % config.n_head == 0
-        key_query_dim = config.n_embd // config.n_head
-        value_dim = config.n_embd // config.n_head
+        self.key_query_dim = config.n_embd // config.n_head
+        self.value_dim = config.n_embd // config.n_head
         # key, query, value projections for all heads, but in a batch
-        self.gen_key = nn.Linear(config.n_embd, key_query_dim)
-        self.gen_query = nn.Linear(config.n_embd, key_query_dim)
-        self.gen_value = nn.Linear(config.n_embd, value_dim)
+        self.gen_key = nn.Linear(config.n_embd, self.key_query_dim)
+        self.gen_query = nn.Linear(config.n_embd, self.key_query_dim)
+        self.gen_value = nn.Linear(config.n_embd, self.value_dim)
         # output projection
         self.output = nn.Linear(value_dim, config.n_embd)
         # regularization
@@ -44,15 +44,15 @@ class CausalSelfAttention(nn.Module):
 
         # calculate query, key, values for all heads in batch and move head forward to be the batch dim
         
-        k = self.gen_key(x).view(batch_size, num_tokens, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
-        q = self.gen_query(x).view(batch_size, num_tokens, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
-        v = self.gen_value(x).view(batch_size, num_tokens, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
+        key = self.gen_key(x).view(batch_size, num_tokens, self.n_head, self.key_query_dim).transpose(1, 2) # (B, nh, T, hs)
+        query = self.gen_query(x).view(batch_size, num_tokens, self.n_head, self.key_query_dim).transpose(1, 2) # (B, nh, T, hs)
+        value = self.gen_value(x).view(batch_size, num_tokens, self.n_head, self.value_dim).transpose(1, 2) # (B, nh, T, hs)
 
-        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
+        att = (query @ key.transpose(-2, -1)) * (1.0 / math.sqrt(key.size(-1)))
         att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
         att = F.softmax(att, dim=-1)
         att = self.attn_dropout(att)
-        y = att @ v # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+        y = att @ value # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
         y = y.transpose(1, 2).contiguous().view(B, T, C) # re-assemble all head outputs side by side
 
         # output projection
