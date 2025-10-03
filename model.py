@@ -47,7 +47,7 @@ class CausalSelfAttention(nn.Module):
         query = einx.rearrange("batch token (head dim) -> batch head token dim", self.gen_query(x), head=self.n_head)
         value = einx.rearrange("batch token (head dim) -> batch head token dim", self.gen_value(x), head=self.n_head)
 
-        att = (query @ key.transpose(-2, -1)) * (1.0 / math.sqrt(key.size(-1)))
+        att = (query @ key.transpose(-2, -1)) * (1.0 / math.sqrt(self.key_query_dim))
         att = att.masked_fill(self.bias[:,:,:num_tokens,:num_tokens] == 0, float('-inf'))
         att = F.softmax(att, dim=-1)
         att = self.attn_dropout(att)
