@@ -28,7 +28,7 @@ class CausalSelfAttention(nn.Module):
         self.gen_query = nn.Linear(config.n_embd, self.key_query_dim)
         self.gen_value = nn.Linear(config.n_embd, self.value_dim)
         # output projection
-        self.output = nn.Linear(value_dim, config.n_embd)
+        self.output = nn.Linear(self.value_dim, config.n_embd)
         # regularization
         self.attn_dropout = nn.Dropout(config.dropout)
         self.resid_dropout = nn.Dropout(config.dropout)
