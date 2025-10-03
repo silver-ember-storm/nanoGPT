@@ -49,11 +49,11 @@ class CausalSelfAttention(nn.Module):
         value = self.gen_value(x).view(batch_size, num_tokens, self.n_head, n_embd // self.n_head).transpose(1, 2) # (B, nh, T, hs)
 
         att = (query @ key.transpose(-2, -1)) * (1.0 / math.sqrt(key.size(-1)))
-        att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
+        att = att.masked_fill(self.bias[:,:,:num_tokens,:num_tokens] == 0, float('-inf'))
         att = F.softmax(att, dim=-1)
         att = self.attn_dropout(att)
         y = att @ value # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
-        y = y.transpose(1, 2).contiguous().view(B, T, C) # re-assemble all head outputs side by side
+        y = y.transpose(1, 2).contiguous().view(batch_size, num_tokens, n_embd) # re-assemble all head outputs side by side
 
         # output projection
         y = self.resid_dropout(self.output(y))
