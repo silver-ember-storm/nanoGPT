@@ -49,7 +49,7 @@ class CausalSelfAttention(nn.Module):
 
         att = einx.dot("batch head key_token [dim], batch head query_token [dim] -> batch head key_token query_token", key, query)
         att /= math.sqrt(self.key_query_dim)
-        att += torch.triu(torch.full((config.block_size, config.block_size), -math.inf), diagonal=1).view(1, 1, config.block_size, config.block_size)
+        att += torch.triu(torch.full((config.num_tokens, config.num_tokens), -math.inf), diagonal=1).view(1, 1, config.block_size, config.block_size)
         att = F.softmax(att, dim=-1)
         att = self.attn_dropout(att)
         y = att @ value # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
