@@ -24,7 +24,7 @@ class CausalSelfAttention(nn.Module):
         self.gen_query = nn.Linear(config.n_embd, config.n_embd)
         self.gen_value = nn.Linear(config.n_embd, config.n_embd)
         # output projection
-        self.c_proj = nn.Linear(config.n_embd, config.n_embd)
+        self.output = nn.Linear(config.n_embd, config.n_embd)
         # regularization
         self.attn_dropout = nn.Dropout(config.dropout)
         self.resid_dropout = nn.Dropout(config.dropout)
@@ -39,9 +39,10 @@ class CausalSelfAttention(nn.Module):
         B, T, C = x.size() # batch size, sequence length, embedding dimensionality (n_embd)
 
         # calculate query, key, values for all heads in batch and move head forward to be the batch dim
-        k = self.gen_key(x)
-        q = self.gen_query(x)
-        v = self.gen_value(x)
+        key = self.gen_key(x)
+        query = self.gen_query(x)
+        value = self.gen_value(x)
+        
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
         q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
@@ -54,7 +55,7 @@ class CausalSelfAttention(nn.Module):
         y = y.transpose(1, 2).contiguous().view(B, T, C) # re-assemble all head outputs side by side
 
         # output projection
-        y = self.resid_dropout(self.c_proj(y))
+        y = self.resid_dropout(self.output(y))
         return y
 
 class MLP(nn.Module):
