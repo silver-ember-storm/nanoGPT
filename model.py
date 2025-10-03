@@ -43,10 +43,9 @@ class CausalSelfAttention(nn.Module):
         batch_size, num_tokens, n_embd = x.size() 
 
         # calculate query, key, values for all heads in batch and move head forward to be the batch dim
-        
-        key = self.gen_key(x).view(batch_size, num_tokens, self.n_head, self.key_query_dim).transpose(1, 2) # (B, nh, T, hs)
-        query = self.gen_query(x).view(batch_size, num_tokens, self.n_head, self.key_query_dim).transpose(1, 2) # (B, nh, T, hs)
-        value = self.gen_value(x).view(batch_size, num_tokens, self.n_head, self.value_dim).transpose(1, 2) # (B, nh, T, hs)
+        key = einx.rearrange("batch token (head dim) -> batch token head dim", self.gen_key(x), head=self.n_head)
+        query = einx.rearrange("batch token (head dim) -> batch token head dim", self.gen_query(x), head=self.n_head)
+        value = einx.rearrange("batch token (head dim) -> batch token head dim", self.gen_value(x), head=self.n_head)
 
         att = (query @ key.transpose(-2, -1)) * (1.0 / math.sqrt(key.size(-1)))
         att = att.masked_fill(self.bias[:,:,:num_tokens,:num_tokens] == 0, float('-inf'))
